@@ -36,42 +36,19 @@ jobs:
           IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
           docker build -t $IMAGE_URI ./strapi
           docker push $IMAGE_URI
-          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
 
-      - name: Replace Image Tag in Task Definition
+      - name: Update Task Definition Image
         run: |
           sed "s|IMAGE_TAG|${{ github.sha }}|g" taskdef-template.json > taskdef.json
 
       - name: Register New Task Definition
-        id: register-task
         run: |
-          TASK_DEF_ARN=$(aws ecs register-task-definition \
-            --cli-input-json file://taskdef.json \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text)
-          echo "TASK_DEF_ARN=$TASK_DEF_ARN" >> $GITHUB_ENV
+          aws ecs register-task-definition \
+            --cli-input-json file://taskdef.json
 
-      - name: Deploy to CodeDeploy
-        uses: aws-actions/aws-codedeploy-deploy@v1
-        with:
-          application-name: ${{ env.CODEDEPLOY_APP }}
-          deployment-group: ${{ env.CODEDEPLOY_GROUP }}
-          revision-type: AppSpecContent
-          appspec-content: |
-            {
-              "version": 1,
-              "Resources": [
-                {
-                  "TargetService": {
-                    "Type": "AWS::ECS::Service",
-                    "Properties": {
-                      "TaskDefinition": "${{ env.TASK_DEF_ARN }}",
-                      "LoadBalancerInfo": {
-                        "ContainerName": "strapi",
-                        "ContainerPort": 1337
-                      }
-                    }
-                  }
-                }
-              ]
-            }
+      - name: Trigger CodeDeploy
+        run: |
+          aws deploy create-deployment \
+            --application-name $CODEDEPLOY_APP \
+            --deployment-group-name $CODEDEPLOY_GROUP \
+            --revision revisionType=AppSpecContent,appSpecContent={content=$(base64 -w 0 appspec.json)}

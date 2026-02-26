@@ -8,8 +8,6 @@ on:
 env:
   AWS_REGION: ap-south-1
   ECR_REPOSITORY: strapi-repo
-  ECS_CLUSTER: strapi-cluster
-  ECS_SERVICE: strapi-service
   CODEDEPLOY_APP: strapi-codedeploy-app
   CODEDEPLOY_GROUP: strapi-deployment-group
 
@@ -37,7 +35,7 @@ jobs:
           IMAGE_TAG=${{ github.sha }}
           IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
           
-          docker build -t $IMAGE_URI .
+          docker build -t $IMAGE_URI ./strapi
           docker push $IMAGE_URI
 
           echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
@@ -48,12 +46,8 @@ jobs:
 
       - name: Register New Task Definition
         run: |
-          TASK_DEF_ARN=$(aws ecs register-task-definition \
-            --cli-input-json file://taskdef.json \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text)
-
-          echo "TASK_DEF_ARN=$TASK_DEF_ARN" >> $GITHUB_ENV
+          aws ecs register-task-definition \
+            --cli-input-json file://taskdef.json
 
       - name: Create CodeDeploy Deployment
         run: |

@@ -8,8 +8,8 @@ on:
 env:
   AWS_REGION: ap-south-1
   ECR_REPOSITORY: strapi
-  CODEDEPLOY_APP: strapi-codedeploy-app
-  CODEDEPLOY_GROUP: strapi-deployment-group
+  CODEDEPLOY_APP: dev-codedeploy
+  CODEDEPLOY_GROUP: dev-dg
 
 jobs:
   deploy:

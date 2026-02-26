@@ -7,7 +7,7 @@ on:
 
 env:
   AWS_REGION: ap-south-1
-  ECR_REPOSITORY: strapi-repo
+  ECR_REPOSITORY: strapi
   CODEDEPLOY_APP: strapi-codedeploy-app
   CODEDEPLOY_GROUP: strapi-deployment-group
 

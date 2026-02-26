@@ -1,7 +1,7 @@
 [
   {
     "name": "strapi",
-    "image": "663959447043.dkr.ecr.ap-south-1.amazonaws.com/strapi-ecs:latest",
+    "image": "IMAGE_URI",
     "essential": true,
     "portMappings": [
       {

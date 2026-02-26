@@ -1,24 +1,31 @@
-name: CI
+name: CI - Build and Push
 
 on:
-  pull_request:
   push:
     branches:
       - main
 
 jobs:
-  terraform-check:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
 
-      - run: |
-          cd environments/dev
-          terraform init -backend=false
+      - uses: aws-actions/amazon-ecr-login@v2
 
-      - run: |
-          cd environments/dev
-          terraform validate
+      - name: Build and Push
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/strapi-ecs:$IMAGE_TAG
+
+          docker build -t $IMAGE_URI .
+          docker push $IMAGE_URI
+
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV

@@ -39,7 +39,7 @@ resource "aws_codedeploy_deployment_group" "dg" {
 
   blue_green_deployment_config {
 
-    # 🔥 REQUIRED (missing piece)
+    #  REQUIRED (missing piece)
     deployment_ready_option {
       action_on_timeout    = "CONTINUE_DEPLOYMENT"
       wait_time_in_minutes = 0

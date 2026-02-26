@@ -1,10 +1,10 @@
-name: Deploy
+name: CD - Deploy
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["CI - Build and Push"]
+    types:
+      - completed
 
 jobs:
   deploy:
@@ -13,18 +13,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: hashicorp/setup-terraform@v3
-
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
-      - run: |
-          cd environments/dev
-          terraform init
+      - name: Update Task Definition
+        run: |
+          IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/strapi-ecs:${{ github.sha }}
+          sed -i "s|IMAGE_URI|$IMAGE_URI|g" taskdef.json
 
-      - run: |
-          cd environments/dev
-          terraform apply -auto-approve
+      - name: Register Task Definition
+        run: |
+          aws ecs register-task-definition \
+            --cli-input-json file://taskdef.json
+
+      - name: Trigger CodeDeploy
+        run: |
+          aws deploy create-deployment \
+            --application-name dev-codedeploy \
+            --deployment-group-name dev-dg \
+            --revision file://revision.json

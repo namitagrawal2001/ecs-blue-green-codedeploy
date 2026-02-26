@@ -20,15 +20,22 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
+      # 👇 ADD THIS STEP HERE
       - name: Get Latest Task Definition
-        id: taskdef
         run: |
           TASK_DEF=$(aws ecs list-task-definitions \
             --family-prefix dev-strapi \
             --sort DESC \
-            --max-items 1 \
+            --region ap-south-1 \
             --query 'taskDefinitionArns[0]' \
             --output text)
+
+          echo "Latest task definition: $TASK_DEF"
+
+          if [ -z "$TASK_DEF" ] || [ "$TASK_DEF" = "None" ]; then
+            echo "Task definition not found"
+            exit 1
+          fi
 
           echo "TASK_DEF=$TASK_DEF" >> $GITHUB_ENV
 

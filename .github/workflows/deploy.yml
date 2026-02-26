@@ -1,37 +1,45 @@
-name: CD - Deploy
+name: Deploy to ECS (Blue-Green)
 
 on:
-  workflow_run:
-    workflows: ["CI - Build and Push"]
-    types:
-      - completed
+  push:
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
-      - name: Update Task Definition
-        run: |
-          IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/strapi-ecs:${{ github.sha }}
-          sed -i "s|IMAGE_URI|$IMAGE_URI|g" taskdef.json
-
-      - name: Register Task Definition
+      - name: Register New Task Definition
         run: |
           aws ecs register-task-definition \
-            --cli-input-json file://taskdef.json
+            --family dev-strapi \
+            --network-mode awsvpc \
+            --requires-compatibilities FARGATE \
+            --cpu "512" \
+            --memory "1024" \
+            --execution-role-arn arn:aws:iam::663959447043:role/ecsTaskExecutionRole \
+            --container-definitions "[{
+              \"name\":\"strapi\",
+              \"image\":\"663959447043.dkr.ecr.ap-south-1.amazonaws.com/strapi-ecs:latest\",
+              \"essential\":true,
+              \"portMappings\":[{\"containerPort\":1337,\"hostPort\":1337}]
+            }]"
 
       - name: Trigger CodeDeploy
         run: |
           aws deploy create-deployment \
             --application-name dev-codedeploy \
             --deployment-group-name dev-dg \
+            --deployment-config-name CodeDeployDefault.ECSAllAtOnce \
             --revision file://revision.json

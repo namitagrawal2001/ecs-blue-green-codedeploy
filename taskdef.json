@@ -1,21 +1,14 @@
-{
-  "family": "dev-strapi",
-  "networkMode": "awsvpc",
-  "requiresCompatibilities": ["FARGATE"],
-  "cpu": "512",
-  "memory": "1024",
-  "containerDefinitions": [
-    {
-      "name": "strapi",
-      "image": "IMAGE_URI",
-      "essential": true,
-      "portMappings": [
-        {
-          "containerPort": 1337,
-          "hostPort": 1337,
-          "protocol": "tcp"
-        }
-      ]
-    }
-  ]
-}
+[
+  {
+    "name": "strapi",
+    "image": "663959447043.dkr.ecr.ap-south-1.amazonaws.com/strapi-ecs:latest",
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 1337,
+        "hostPort": 1337,
+        "protocol": "tcp"
+      }
+    ]
+  }
+]

@@ -1,4 +1,4 @@
-name: Deploy to ECS (Blue-Green)
+name: Deploy to ECS Blue-Green
 
 on:
   push:
@@ -20,21 +20,26 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
-      - name: Register New Task Definition
+      - name: Get Latest Task Definition
+        id: taskdef
         run: |
-          aws ecs register-task-definition \
-            --family dev-strapi \
-            --network-mode awsvpc \
-            --requires-compatibilities FARGATE \
-            --cpu "512" \
-            --memory "1024" \
-            --execution-role-arn arn:aws:iam::663959447043:role/ecsTaskExecutionRole \
-            --container-definitions "[{
-              \"name\":\"strapi\",
-              \"image\":\"663959447043.dkr.ecr.ap-south-1.amazonaws.com/strapi-ecs:latest\",
-              \"essential\":true,
-              \"portMappings\":[{\"containerPort\":1337,\"hostPort\":1337}]
-            }]"
+          TASK_DEF=$(aws ecs list-task-definitions \
+            --family-prefix dev-strapi \
+            --sort DESC \
+            --max-items 1 \
+            --query 'taskDefinitionArns[0]' \
+            --output text)
+
+          echo "TASK_DEF=$TASK_DEF" >> $GITHUB_ENV
+
+      - name: Create revision.json
+        run: |
+          echo '{
+            "revisionType": "AppSpecContent",
+            "appSpecContent": {
+              "content": "{\"version\":1,\"Resources\":[{\"TargetService\":{\"Type\":\"AWS::ECS::Service\",\"Properties\":{\"TaskDefinition\":\"'$TASK_DEF'\",\"LoadBalancerInfo\":{\"ContainerName\":\"strapi\",\"ContainerPort\":1337}}}}]}"
+            }
+          }' > revision.json
 
       - name: Trigger CodeDeploy
         run: |

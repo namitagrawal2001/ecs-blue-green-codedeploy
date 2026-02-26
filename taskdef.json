@@ -1,14 +1,21 @@
-[
-  {
-    "name": "strapi",
-    "image": "663959447043.dkr.ecr.ap-south-1.amazonaws.com/strapi-ecs:latest",
-    "essential": true,
-    "portMappings": [
-      {
-        "containerPort": 1337,
-        "hostPort": 1337,
-        "protocol": "tcp"
-      }
-    ]
-  }
-]
+{
+  "family": "strapi-task",
+  "networkMode": "awsvpc",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "strapi",
+      "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/strapi-repo:IMAGE_TAG",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 1337,
+          "protocol": "tcp"
+        }
+      ]
+    }
+  ],
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512"
+}

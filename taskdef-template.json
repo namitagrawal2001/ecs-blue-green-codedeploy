@@ -1,5 +1,5 @@
 {
-  "family": "strapi-task",
+  "family": "dev-strapi",
   "networkMode": "awsvpc",
   "executionRoleArn": "arn:aws:iam::663959447043:role/ecsTaskExecutionRole",
   "containerDefinitions": [
@@ -12,6 +12,11 @@
           "containerPort": 1337,
           "protocol": "tcp"
         }
+      ],
+      "environment": [
+        { "name": "HOST", "value": "0.0.0.0" },
+        { "name": "PORT", "value": "1337" },
+        { "name": "NODE_ENV", "value": "production" }
       ]
     }
   ],

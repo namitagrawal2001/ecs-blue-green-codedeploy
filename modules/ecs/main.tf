@@ -6,12 +6,25 @@ resource "aws_ecs_task_definition" "task" {
   family                   = "${var.env}-strapi"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu    = "512"
-  memory = "1024"
-
-  container_definitions = file("${path.module}/../../taskdef.json")
+  cpu                      = "512"
+  memory                   = "1024"
 
   execution_role_arn = var.execution_role
+
+  container_definitions = jsonencode([
+    {
+      name      = "strapi"
+      image     = "663959447043.dkr.ecr.ap-south-1.amazonaws.com/strapi:latest"
+      essential = true
+
+      portMappings = [
+        {
+          containerPort = 1337
+          protocol      = "tcp"
+        }
+      ]
+    }
+  ])
 }
 
 resource "aws_ecs_service" "service" {
@@ -21,12 +34,10 @@ resource "aws_ecs_service" "service" {
   launch_type     = "FARGATE"
   desired_count   = 1
 
-  # CodeDeploy controls deployments
   deployment_controller {
     type = "CODE_DEPLOY"
   }
 
-  # 🔥 IMPORTANT — avoid Terraform vs CodeDeploy conflict
   lifecycle {
     ignore_changes = [
       task_definition,

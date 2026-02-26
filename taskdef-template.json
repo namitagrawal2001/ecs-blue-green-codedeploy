@@ -14,10 +14,15 @@
         }
       ],
       "environment": [
-        { "name": "HOST", "value": "0.0.0.0" },
-        { "name": "PORT", "value": "1337" },
-        { "name": "NODE_ENV", "value": "production" }
-      ]
+       { "name": "HOST", "value": "0.0.0.0" },
+       { "name": "PORT", "value": "1337" },
+       { "name": "NODE_ENV", "value": "production" },
+       { "name": "APP_KEYS", "value": "testKey1,testKey2" },
+       { "name": "API_TOKEN_SALT", "value": "randomSalt123" },
+       { "name": "ADMIN_JWT_SECRET", "value": "adminSecret123" },
+       { "name": "JWT_SECRET", "value": "jwtSecret123" }
+
+     ]
     }
   ],
   "requiresCompatibilities": ["FARGATE"],
